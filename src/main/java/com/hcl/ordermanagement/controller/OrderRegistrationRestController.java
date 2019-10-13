@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hcl.ordermanagement.dto.DashBoardDTO;
 import com.hcl.ordermanagement.dto.OrderDTO;
+import com.hcl.ordermanagement.exception.CustomErrorType;
 import com.hcl.ordermanagement.repository.OrderJpaRepository;
 import com.hcl.ordermanagement.utils.BusinessUtils;
 
@@ -40,6 +41,9 @@ public class OrderRegistrationRestController {
 	@GetMapping("/")
 	public ResponseEntity<List<OrderDTO>> getAllOrders(){
 		List<OrderDTO> orders = orderJpaRepository.findAll();
+		if(orders.isEmpty()) {
+			return new ResponseEntity<List<OrderDTO>>(orders,HttpStatus.NO_CONTENT);
+		}
 		return new ResponseEntity<List<OrderDTO>>(orders,HttpStatus.OK);	
 	}
 	
@@ -52,14 +56,22 @@ public class OrderRegistrationRestController {
 	@GetMapping("/{id}")
 	public ResponseEntity<OrderDTO> getOrderById(@PathVariable final Long id){
 		Optional<OrderDTO> order = orderJpaRepository.findById(id);
+		if(!order.isPresent()) {
+			return new ResponseEntity<OrderDTO>(new CustomErrorType("Order with id " + id + " not found"), HttpStatus.NOT_FOUND);
+		}
 		OrderDTO orders = order.get();
 		return new ResponseEntity<OrderDTO>(orders,HttpStatus.OK);	
 	}
 	
 	@DeleteMapping("/{id}")
 	public ResponseEntity<OrderDTO> deleteOrder(@PathVariable final Long id){
+		Optional<OrderDTO> order = orderJpaRepository.findById(id);
+		if(!order.isPresent()) {
+			return new ResponseEntity<OrderDTO>(new CustomErrorType("Order with id " + id + " not found"), HttpStatus.NOT_FOUND);
+		}
+		OrderDTO orders = order.get();
 		orderJpaRepository.deleteById(id);
-		return new ResponseEntity<OrderDTO>(HttpStatus.NO_CONTENT);
+		return new ResponseEntity<OrderDTO>(new CustomErrorType("Order with id " + id + " deleted"),HttpStatus.OK);
 	}
 	
 	@GetMapping("/home")
